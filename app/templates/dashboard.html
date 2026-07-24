@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEO Agent — AI Engine Optimization</title>
+<style>
+:root {
+  --bg: #080c14;
+  --surface: #0f1724;
+  --card: #131d2e;
+  --border: #1e2d42;
+  --accent: #4f8ef7;
+  --green: #22c55e;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --purple: #a855f7;
+  --teal: #14b8a6;
+  --text: #e2eaf5;
+  --muted: #5a7299;
+  --font-display: 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-display); min-height: 100vh; }
+
+/* ── Header ─────────────────────────────────────────────────────── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 60px;
+  display: flex; align-items: center; gap: 16px;
+}
+.logo { font-size: 18px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.logo-icon { font-size: 22px; }
+.scheduler-badge {
+  margin-left: auto; font-size: 11px; padding: 5px 12px;
+  border-radius: 20px; border: 1px solid var(--teal);
+  color: var(--teal); display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+}
+.pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── Layout ─────────────────────────────────────────────────────── */
+.page { max-width: 1300px; margin: 0 auto; padding: 28px 32px; }
+
+/* ── Input Section ──────────────────────────────────────────────── */
+.input-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+.input-label {
+  font-size: 13px; color: var(--muted); margin-bottom: 10px;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.input-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+.url-input {
+  flex: 1; min-width: 200px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px; color: var(--text);
+  font-size: 15px; font-family: var(--font-display); outline: none;
+  transition: border-color .2s;
+}
+.url-input:focus { border-color: var(--accent); }
+.url-input::placeholder { color: var(--muted); }
+
+/* Analyze button */
+.btn-analyze {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 12px 28px; font-size: 15px;
+  font-weight: 600; cursor: pointer; font-family: var(--font-display);
+  transition: .15s; white-space: nowrap;
+}
+.btn-analyze:hover { background: #3a7ae0; }
+.btn-analyze:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Download buttons */
+.btn-download {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-display);
+  transition: all .15s;
+  white-space: nowrap;
+  display: none;
+}
+.btn-download:hover { background: var(--border); }
+#btn-excel { border-color: var(--green); color: var(--green); }
+#btn-excel:hover { background: rgba(34,197,94,.1); }
+#btn-pdf { border-color: var(--accent); color: var(--accent); }
+#btn-pdf:hover { background: rgba(79,142,247,.1); }
+
+/* Progress */
+.progress-bar-wrap {
+  margin-top: 16px; background: var(--bg);
+  border-radius: 8px; height: 6px; overflow: hidden; display: none;
+}
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--teal)); border-radius: 8px; transition: width .4s; }
+.progress-label { font-size: 12px; color: var(--muted); margin-top: 8px; font-family: var(--font-mono); }
+
+/* ── Section Heading ─────────────────────────────────────────────── */
+.sec-head {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); margin-bottom: 14px; font-family: var(--font-mono);
+}
+
+/* ── Score Grid ──────────────────────────────────────────────────── */
+.score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.score-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; text-align: center; position: relative; overflow: hidden;
+}
+.score-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.score-card.overall::before { background: var(--accent); }
+.score-card.chatgpt::before { background: #10a37f; }
+.score-card.gemini::before  { background: #4285f4; }
+.score-card.google::before  { background: var(--yellow); }
+
+.score-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.score-value { font-size: 40px; font-weight: 800; line-height: 1; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.score-card.overall .score-value { color: var(--accent); }
+.score-card.chatgpt .score-value { color: #10a37f; }
+.score-card.gemini  .score-value { color: #4285f4; }
+.score-card.google  .score-value { color: var(--yellow); }
+.score-grade { font-size: 12px; color: var(--muted); }
+
+/* ── Sub-score Bars ──────────────────────────────────────────────── */
+.sub-scores { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+.sub-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sub-row:last-child { margin-bottom: 0; }
+.sub-name { font-size: 13px; color: var(--text); min-width: 180px; }
+.sub-bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; }
+.sub-bar { height: 100%; border-radius: 3px; background: var(--accent); }
+.sub-num { font-size: 13px; color: var(--muted); font-family: var(--font-mono); min-width: 36px; text-align: right; }
+
+/* ── Two Column ──────────────────────────────────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+
+/* ── List Card ───────────────────────────────────────────────────── */
+.list-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.list-card h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+.tag-list { list-style: none; }
+.tag-list li {
+  font-size: 13px; padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;
+}
+.tag-list li:last-child { border-bottom: none; }
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; margin-top: 2px; }
+.tag.ok  { background: rgba(34,197,94,.12);  color: var(--green);  border: 1px solid rgba(34,197,94,.25); }
+.tag.bad { background: rgba(239,68,68,.1);   color: var(--red);    border: 1px solid rgba(239,68,68,.2); }
+.tag.hi  { background: rgba(239,68,68,.1);   color: var(--red);    border: 1px solid rgba(239,68,68,.2); }
+.tag.med { background: rgba(245,158,11,.1);  color: var(--yellow); border: 1px solid rgba(245,158,11,.2); }
+.tag.lo  { background: rgba(34,197,94,.1);   color: var(--green);  border: 1px solid rgba(34,197,94,.2); }
+
+/* ── Competitors ─────────────────────────────────────────────────── */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.comp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.comp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.comp-name { font-size: 14px; font-weight: 600; }
+.comp-score { font-size: 22px; font-weight: 800; color: var(--purple); }
+.comp-url { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.vs-block { background: var(--bg); border-radius: 8px; padding: 10px; }
+.vs-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.vs-item { font-size: 11px; color: var(--text); padding: 3px 0; }
+.opportunity-box {
+  background: rgba(168,85,247,.08); border: 1px solid rgba(168,85,247,.2);
+  border-radius: 8px; padding: 10px; margin-top: 12px; font-size: 12px; color: var(--purple);
+}
+
+/* ── FAQs ────────────────────────────────────────────────────────── */
+.faq-list { margin-bottom: 28px; }
+.faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.faq-q {
+  padding: 14px 18px; font-size: 14px; font-weight: 500;
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+}
+.faq-q:hover { background: var(--border); }
+.faq-platform {
+  font-size: 10px; padding: 2px 8px; border-radius: 20px;
+  background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid rgba(79,142,247,.2);
+  white-space: nowrap; margin-left: 10px;
+}
+.faq-a {
+  padding: 0 18px; max-height: 0; overflow: hidden;
+  font-size: 13px; color: var(--muted); line-height: 1.7;
+  transition: max-height .3s, padding .3s;
+}
+.faq-item.open .faq-a { max-height: 300px; padding: 0 18px 14px; }
+
+/* ── 30-Day Plan ─────────────────────────────────────────────────── */
+.plan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.plan-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.plan-week { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; font-family: var(--font-mono); }
+.plan-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* ── History Table ───────────────────────────────────────────────── */
+.hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.hist-table th {
+  color: var(--muted); text-align: left; padding: 8px 12px;
+  border-bottom: 1px solid var(--border); font-size: 11px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.hist-table td { padding: 10px 12px; border-bottom: 1px solid rgba(30,45,66,.5); }
+.hist-table tr:last-child td { border-bottom: none; }
+
+/* ── Idle State ──────────────────────────────────────────────────── */
+#idle-state { text-align: center; padding: 80px 20px; color: var(--muted); }
+#idle-state .idle-icon { font-size: 48px; margin-bottom: 16px; }
+#idle-state p { font-size: 15px; }
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 20px; font-size: 13px;
+  z-index: 999; transform: translateY(100px); opacity: 0; transition: .3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .score-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col    { grid-template-columns: 1fr; }
+  .plan-grid  { grid-template-columns: 1fr 1fr; }
+  .input-row  { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo" style="width:100%;justify-content:center;">
+  <span class="logo-icon">🧠</span> AEO Agent
+</div>
+  <div class="scheduler-badge"><span class="pulse"></span> Auto-runs: 1st · 15th · 30th</div>
+</header>
+
+<div class="page">
+
+  <!-- ── Input ─────────────────────────────────────────────────── -->
+  <div class="input-section">
+    <div class="input-label">Your Website</div>
+    <div class="input-row">
+      <input type="text" class="url-input" id="url-input"
+             placeholder="e.g. myntra, amazon, zara" />
+      <button class="btn-analyze" id="btn-analyze" onclick="startAnalysis()">
+        ⚡ Analyze Now
+      </button>
+      <button class="btn-download" id="btn-excel" onclick="downloadReport('excel')">
+        📊 Excel
+      </button>
+      <button class="btn-download" id="btn-pdf" onclick="downloadReport('pdf')">
+        📄 PDF
+      </button>
+    </div>
+    <div class="progress-bar-wrap" id="progress-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div class="progress-label" id="progress-label"></div>
+  </div>
+
+  <!-- ── Idle State ────────────────────────────────────────────── -->
+  <div id="idle-state">
+    <div class="idle-icon">🔍</div>
+    <p>Type a website name above — analysis starts automatically.</p>
+    <p style="margin-top:8px;font-size:13px">
+      Detects competitors · Scores ChatGPT, Gemini &amp; Google AI visibility · Generates FAQs &amp; recommendations
+    </p>
+  </div>
+
+  <!-- ── Results ───────────────────────────────────────────────── -->
+  <div id="results" style="display:none">
+
+    <div class="sec-head">AEO Visibility Scores</div>
+    <div class="score-grid">
+      <div class="score-card overall">
+        <div class="score-label">Overall AEO</div>
+        <div class="score-value" id="sc-overall">—</div>
+        <div class="score-grade" id="sc-overall-grade"></div>
+      </div>
+      <div class="score-card chatgpt">
+        <div class="score-label">ChatGPT Visibility</div>
+        <div class="score-value" id="sc-chatgpt">—</div>
+        <div class="score-grade">OpenAI / GPT-4</div>
+      </div>
+      <div class="score-card gemini">
+        <div class="score-label">Gemini Visibility</div>
+        <div class="score-value" id="sc-gemini">—</div>
+        <div class="score-grade">Google Gemini</div>
+      </div>
+      <div class="score-card google">
+        <div class="score-label">Google AI Overview</div>
+        <div class="score-value" id="sc-google">—</div>
+        <div class="score-grade">SGE / AI Overviews</div>
+      </div>
+    </div>
+
+    <div class="sec-head">Breakdown</div>
+    <div class="sub-scores" id="sub-scores"></div>
+
+    <div class="two-col">
+      <div class="list-card">
+        <h3>✅ Your Strengths</h3>
+        <ul class="tag-list" id="strengths-list"></ul>
+      </div>
+      <div class="list-card">
+        <h3>⚠️ Weaknesses to Fix</h3>
+        <ul class="tag-list" id="weaknesses-list"></ul>
+      </div>
+    </div>
+
+    <div class="sec-head">Competitor Intelligence</div>
+    <div class="comp-grid" id="comp-grid"></div>
+
+    <div class="sec-head">Strategic Recommendations</div>
+    <div class="list-card" style="margin-bottom:28px">
+      <h3>Priority Actions</h3>
+      <ul class="tag-list" id="rec-list"></ul>
+    </div>
+
+    <div class="sec-head">Trending FAQs to Add to Your Site</div>
+    <div class="faq-list" id="faq-list"></div>
+
+    <div class="sec-head">30-Day Action Plan</div>
+    <div class="plan-grid" id="plan-grid"></div>
+
+  </div>
+
+  <!-- ── History ────────────────────────────────────────────────── -->
+  <div id="history-section" style="display:none">
+    <div class="sec-head">Analysis History</div>
+    <div class="list-card" style="padding:0;overflow:hidden;margin-bottom:28px">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Website</th>
+            <th>Overall AEO</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="hist-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let polling = null;
+
+// ── Utilities ────────────────────────────────────────────────────────
+function toast(msg, dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function grade(n) {
+  if (n >= 80) return 'Excellent';
+  if (n >= 60) return 'Good';
+  if (n >= 40) return 'Fair';
+  return 'Needs Work';
+}
+
+function showDownloadButtons(show) {
+  document.getElementById('btn-excel').style.display = show ? 'block' : 'none';
+  document.getElementById('btn-pdf').style.display   = show ? 'block' : 'none';
+}
+
+// ── Download ─────────────────────────────────────────────────────────
+function downloadReport(format) {
+  toast(`Preparing ${format.toUpperCase()} download…`, 2000);
+  window.location.href = `/api/download/${format}`;
+}
+
+// ── Analysis ─────────────────────────────────────────────────────────
+async function startAnalysis() {
+  // Guard: ignore this call if an analysis is already running (prevents the
+  // Enter-key trigger and the 2s auto-analyze-on-typing trigger from both
+  // firing and starting two concurrent runs that corrupt shared state).
+  if (document.getElementById('btn-analyze').disabled) return;
+  clearTimeout(typingTimer);
+
+  let url = document.getElementById('url-input').value.trim();
+  if (!url) { toast('Please enter a website name'); return; }
+
+  // Auto-convert name → full URL
+  if (!url.startsWith('http')) {
+    url = url.toLowerCase().replace(/\s+/g, '').replace(/^www\./, '');
+    if (!url.includes('.')) url = url + '.com';
+    url = 'https://' + url;
+  }
+
+  // Hide download buttons while new analysis runs
+  showDownloadButtons(false);
+
+  document.getElementById('btn-analyze').disabled    = true;
+  document.getElementById('btn-analyze').textContent = '⏳ Analyzing…';
+  document.getElementById('idle-state').style.display  = 'none';
+  document.getElementById('results').style.display     = 'none';
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('progress-label').textContent  = 'Starting…';
+
+  try {
+    await fetch('/api/analyze', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ url }),
+    });
+    polling = setInterval(pollProgress, 1500);
+  } catch (e) {
+    toast('Failed to start analysis: ' + e.message);
+    resetBtn();
+  }
+}
+
+async function pollProgress() {
+  try {
+    const r = await fetch('/api/progress');
+    const d = await r.json();
+
+    document.getElementById('progress-bar').style.width    = (d.progress_pct || 0) + '%';
+    document.getElementById('progress-label').textContent  = d.progress || '';
+
+    if (d.status === 'success') {
+      clearInterval(polling);
+      const rr     = await fetch('/api/report');
+      const report = await rr.json();
+      renderReport(report);
+      resetBtn();
+      loadHistory();
+    } else if (d.status === 'error') {
+      clearInterval(polling);
+      toast('❌ Analysis failed — check terminal for details.');
+      document.getElementById('progress-label').textContent = d.progress || 'Error';
+      resetBtn();
+    }
+  } catch (e) { /* ignore transient network errors */ }
+}
+
+function resetBtn() {
+  const b = document.getElementById('btn-analyze');
+  b.disabled    = false;
+  b.textContent = '⚡ Analyze Now';
+}
+
+// ── Render Report ────────────────────────────────────────────────────
+function renderReport(r) {
+  const aeo = r.aeo_scores || {};
+  const ins = r.insights   || {};
+
+  document.getElementById('results').style.display      = 'block';
+  document.getElementById('progress-wrap').style.display = 'none';
+
+  // Scores
+  document.getElementById('sc-overall').textContent       = aeo.overall_aeo          || 0;
+  document.getElementById('sc-chatgpt').textContent       = aeo.chatgpt_visibility   || 0;
+  document.getElementById('sc-gemini').textContent        = aeo.gemini_visibility    || 0;
+  document.getElementById('sc-google').textContent        = aeo.google_ai_overview   || 0;
+  document.getElementById('sc-overall-grade').textContent = grade(aeo.overall_aeo    || 0);
+
+  // Sub-score bars
+  const subs = [
+    { name: 'Content Quality',          val: aeo.content_quality           },
+    { name: 'Structured Data (Schema)', val: aeo.structured_data           },
+    { name: 'Conversational Readiness', val: aeo.conversational_readiness  },
+    { name: 'Entity Clarity',           val: aeo.entity_clarity            },
+  ];
+  document.getElementById('sub-scores').innerHTML = subs.map(s => `
+    <div class="sub-row">
+      <span class="sub-name">${s.name}</span>
+      <div class="sub-bar-bg"><div class="sub-bar" style="width:${s.val || 0}%"></div></div>
+      <span class="sub-num">${s.val || 0}</span>
+    </div>`).join('');
+
+  // Strengths
+  document.getElementById('strengths-list').innerHTML =
+    (aeo.strengths || []).map(s => `<li><span class="tag ok">✓</span>${s}</li>`).join('') ||
+    '<li style="color:var(--muted)">None identified yet</li>';
+
+  // Weaknesses
+  document.getElementById('weaknesses-list').innerHTML =
+    (aeo.weaknesses || []).map(w => `<li><span class="tag bad">!</span>${w}</li>`).join('') ||
+    '<li style="color:var(--muted)">None identified</li>';
+
+  // Competitors
+  const comps    = r.competitors || [];
+  const compGrid = document.getElementById('comp-grid');
+  compGrid.innerHTML = comps.length
+    ? comps.map(c => `
+        <div class="comp-card">
+          <div class="comp-head">
+            <span class="comp-name">${c.competitor_name || 'Competitor'}</span>
+            <span class="comp-score">${c.their_aeo_score || '?'}</span>
+          </div>
+          <div class="comp-url">${c.competitor_url || ''}</div>
+          <div class="vs-row">
+            <div class="vs-block">
+              <div class="vs-label">Their Strengths</div>
+              ${(c.strengths || []).slice(0,3).map(s => `<div class="vs-item">• ${s}</div>`).join('')}
+            </div>
+            <div class="vs-block">
+              <div class="vs-label">Their Weaknesses</div>
+              ${(c.weaknesses || []).slice(0,3).map(w => `<div class="vs-item">• ${w}</div>`).join('')}
+            </div>
+          </div>
+          ${c.opportunity ? `<div class="opportunity-box">💡 ${c.opportunity}</div>` : ''}
+        </div>`).join('')
+    : '<div style="color:var(--muted);font-size:13px">No competitors found yet.</div>';
+
+  // Recommendations
+  const recs    = ins.recommendations || [];
+  const recList = document.getElementById('rec-list');
+  recList.innerHTML = recs.length
+    ? recs.map(rec => {
+        const cls = rec.priority === 'HIGH' ? 'hi' : rec.priority === 'MEDIUM' ? 'med' : 'lo';
+        return `<li>
+          <span class="tag ${cls}">${rec.priority}</span>
+          <span>
+            <strong>${rec.category}:</strong> ${rec.action}
+            ${rec.impact ? ` — <em style="color:var(--muted)">${rec.impact}</em>` : ''}
+          </span>
+        </li>`;
+      }).join('')
+    : '<li style="color:var(--muted)">No recommendations yet</li>';
+
+  // FAQs
+  const faqs    = ins.trending_faqs || [];
+  const faqList = document.getElementById('faq-list');
+  faqList.innerHTML = faqs.length
+    ? faqs.map((f, i) => `
+        <div class="faq-item" id="faq-${i}">
+          <div class="faq-q" onclick="toggleFaq(${i})">
+            <span>${f.question}</span>
+            <span class="faq-platform">${f.ai_platform || 'Both'}</span>
+          </div>
+          <div class="faq-a">${f.answer}</div>
+        </div>`).join('')
+    : '<div style="color:var(--muted);font-size:13px">No FAQs generated</div>';
+
+  // 30-day plan
+  const plan     = ins.next_30_day_plan || [];
+  const planGrid = document.getElementById('plan-grid');
+  planGrid.innerHTML = plan.length
+    ? plan.map((p, i) => {
+        const parts = p.split(':');
+        return `<div class="plan-card">
+          <div class="plan-week">${parts[0] || 'Week ' + (i + 1)}</div>
+          <div class="plan-text">${(parts[1] || p).trim()}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--muted);font-size:13px">No plan generated</div>';
+
+  // Show download buttons now that report is ready
+  showDownloadButtons(true);
+
+  toast('✅ Analysis complete! Download Excel or PDF below.', 4000);
+}
+
+function toggleFaq(i) {
+  document.getElementById('faq-' + i)?.classList.toggle('open');
+}
+
+// ── History ──────────────────────────────────────────────────────────
+async function loadHistory() {
+  const r = await fetch('/api/history');
+  const h = await r.json();
+  if (!h.length) return;
+  document.getElementById('history-section').style.display = 'block';
+  document.getElementById('hist-body').innerHTML = h.map(row => `
+    <tr>
+     <td>${new Date(row.analyzed_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })}</td>
+      <td style="font-family:var(--font-mono);font-size:11px">${row.target_url}</td>
+      <td style="font-weight:700;color:var(--accent)">${row.overall_aeo}</td>
+      <td style="color:var(--green)">✔ ${row.status}</td>
+    </tr>`).join('');
+}
+
+// ── Auto-analyze ─────────────────────────────────────────────────────
+document.getElementById('url-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') startAnalysis();
+});
+
+let typingTimer;
+document.getElementById('url-input').addEventListener('input', function() {
+  clearTimeout(typingTimer);
+  const val = this.value.trim();
+  if (val.length >= 3) {
+    document.getElementById('progress-label').textContent = 'Will auto-analyze in 2s…';
+    typingTimer = setTimeout(() => startAnalysis(), 2000);
+  } else {
+    document.getElementById('progress-label').textContent = '';
+  }
+});
+
+// ── Init ─────────────────────────────────────────────────────────────
+loadHistory();
+</script>
+</body>
+</html>
