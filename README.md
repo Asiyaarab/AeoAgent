@@ -17,6 +17,7 @@ AEO Agent scrapes your site (and up to 4 competitors) through **Scrapfly**, scor
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=flat-square&logo=flask&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+[![CI](https://github.com/Asiyaarab/AeoAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/Asiyaarab/AeoAgent/actions/workflows/ci.yml)
 
 ---
 
@@ -291,6 +292,31 @@ python -c "from app import create_app; app = create_app(); print('App created OK
 ```
 
 Expected: `App created OK: <Flask 'app'>`
+
+---
+
+## ✅ Tests
+
+A small pytest suite (20 tests across 3 files) covers config loading,
+URL/JSON/timestamp helpers, and the Flask app factory. CI runs the
+suite on every push and PR across Python 3.10, 3.11, and 3.12.
+
+### Run locally
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+### What's covered
+
+| File | What it asserts |
+| --- | --- |
+| `tests/test_config.py` | `BASE_DIR`/`DATA_DIR`/`LOG_DIR`/`REPORT_DIR` are `Path` objects, directories are auto-created, default `FLASK_HOST`/`FLASK_PORT`/`SECRET_KEY`, external endpoints use HTTPS, `Z_AI_MODEL` is non-empty. |
+| `tests/test_utils.py` | `normalize_url` adds `https://` only when needed, `extract_domain` strips path/scheme and handles empty input, `parse_json` handles plain JSON + markdown fences, `safe_extract_json_array` finds the first list and returns `[]` when none exists, `now_compact` format, `date_only` slice. |
+| `tests/test_smoke.py` | `create_app()` returns a Flask instance, `SECRET_KEY` is set, all 8 expected routes are registered, `POST` is allowed on `/api/analyze`. |
+
+CI status: see the badge at the top of this README.
 
 ---
 
