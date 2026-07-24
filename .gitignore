@@ -1,0 +1,49 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+ENV/
+
+# --- Distribution / packaging ---
+build/
+dist/
+wheels/
+*.whl
+
+# --- IDEs / editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Environment & secrets (CRITICAL: never commit) ---
+.env
+.env.local
+.env.*.local
+*.env
+secrets.json
+
+# --- Runtime data (auto-generated) ---
+logs/
+data/
+reports/
+
+# --- Test artifacts ---
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
