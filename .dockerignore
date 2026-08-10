@@ -1,0 +1,42 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+htmlcov
+.coverage
+coverage.xml
+*.cover
+
+# IDE
+.idea
+.vscode
+.DS_Store
+
+# Build artifacts
+build
+dist
+wheels
+*.whl
+
+# Runtime data
+data
+logs
+reports
+
+# Secrets (NEVER copy .env into the image)
+.env
+.env.*
+secrets.json
+
+# Docs / assets
+assets/*.png

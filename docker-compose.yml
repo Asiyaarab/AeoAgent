@@ -1,0 +1,21 @@
+services:
+  aeo-agent:
+    build: .
+    image: aeo-agent:1.1.0
+    container_name: aeo-agent
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      # Persist reports, logs, and analysis history across container restarts
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
